@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project FALCON – AI-Powered Network Intrusion Detection</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <i class="fas fa-shield-halved"></i>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">FALCON</span>
+        <span class="logo-sub">AI Threat Detection</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">MAIN</div>
+      <a href="#" class="nav-item active" data-section="overview">
+        <i class="fas fa-gauge-high"></i>
+        <span>Overview</span>
+        <div class="nav-indicator"></div>
+      </a>
+      <a href="#" class="nav-item" data-section="monitoring">
+        <i class="fas fa-network-wired"></i>
+        <span>Live Monitoring</span>
+        <div class="badge pulse-badge">LIVE</div>
+      </a>
+      <a href="#" class="nav-item" data-section="threats">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span>Threat Analysis</span>
+        <div class="badge red">3</div>
+      </a>
+
+      <div class="nav-section-label">MANAGEMENT</div>
+      <a href="#" class="nav-item" data-section="alerts">
+        <i class="fas fa-bell"></i>
+        <span>Alerts Center</span>
+        <div class="badge red">12</div>
+      </a>
+      <a href="#" class="nav-item" data-section="reports">
+        <i class="fas fa-file-chart-column"></i>
+        <span>Reports</span>
+      </a>
+      <a href="#" class="nav-item" data-section="health">
+        <i class="fas fa-heart-pulse"></i>
+        <span>System Health</span>
+      </a>
+
+      <div class="nav-section-label">SYSTEM</div>
+      <a href="#" class="nav-item">
+        <i class="fas fa-sliders"></i>
+        <span>Settings</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-circle-user"></i>
+        <span>Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="system-status">
+        <div class="status-dot online"></div>
+        <span>System Online</span>
+      </div>
+      <div class="version">v4.2.1</div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="page-title" id="pageTitle">
+          <span>Overview</span>
+          <div class="breadcrumb">Dashboard / <span class="crumb-active">Overview</span></div>
+        </div>
+      </div>
+      <div class="topbar-center">
+        <div class="search-bar">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search threats, IPs, events..." />
+          <kbd>Ctrl+K</kbd>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="threat-level">
+          <span class="tl-label">Threat Level</span>
+          <span class="tl-badge medium">MEDIUM</span>
+        </div>
+        <div class="topbar-icons">
+          <button class="icon-btn" title="Refresh">
+            <i class="fas fa-rotate"></i>
+          </button>
+          <button class="icon-btn notify-btn" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notify-count">12</span>
+          </button>
+          <div class="user-avatar">
+            <img src="https://ui-avatars.com/api/?name=Admin+User&background=0a84ff&color=fff&size=36" alt="Admin" />
+            <div class="user-info">
+              <span class="user-name">Admin User</span>
+              <span class="user-role">SOC Analyst</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sections -->
+    <main class="content" id="content">
+
+      <!-- ===== OVERVIEW SECTION ===== -->
+      <section class="section active" id="section-overview">
+
+        <!-- Live Ticker -->
+        <div class="ticker-bar">
+          <div class="ticker-label"><i class="fas fa-satellite-dish pulse-icon"></i> LIVE FEED</div>
+          <div class="ticker-track">
+            <div class="ticker-content" id="tickerContent"></div>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card" data-delay="0">
+            <div class="stat-card-bg bg-blue"></div>
+            <div class="stat-icon"><i class="fas fa-arrows-split-up-and-left"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" data-target="2847391">0</div>
+              <div class="stat-label">Total Traffic (pkts)</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-trend-up"></i> +12.4% vs yesterday</div>
+            </div>
+            <div class="stat-sparkline">
+              <canvas id="spark1" width="80" height="36"></canvas>
+            </div>
+          </div>
+          <div class="stat-card" data-delay="100">
+            <div class="stat-card-bg bg-cyan"></div>
+            <div class="stat-icon"><i class="fas fa-laptop"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" data-target="1284">0</div>
+              <div class="stat-label">Active Devices</div>
+              <div class="stat-change positive"><i class="fas fa-arrow-trend-up"></i> +3 in last hour</div>
+            </div>
+            <div class="stat-sparkline">
+              <canvas id="spark2" width="80" height="36"></canvas>
+            </div>
+          </div>
+          <div class="stat-card" data-delay="200">
+            <div class="stat-card-bg bg-orange"></div>
+            <div class="stat-icon"><i class="fas fa-bug"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" data-target="347">0</div>
+              <div class="stat-label">Threats Detected</div>
+              <div class="stat-change negative"><i class="fas fa-arrow-trend-up"></i> +28 today</div>
+            </div>
+            <div class="stat-sparkline">
+              <canvas id="spark3" width="80" height="36"></canvas>
+            </div>
+          </div>
+          <div class="stat-card" data-delay="300">
+            <div class="stat-card-bg bg-red"></div>
+            <div class="stat-icon"><i class="fas fa-radiation"></i></div>
+            <div class="stat-info">
+              <div class="stat-value" data-target="12">0</div>
+              <div class="stat-label">Critical Alerts</div>
+              <div class="stat-change negative"><i class="fas fa-arrow-trend-up"></i> +5 urgent</div>
+            </div>
+            <div class="stat-sparkline">
+              <canvas id="spark4" width="80" height="36"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart Row -->
+        <div class="chart-row">
+          <div class="card chart-card wide">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-chart-area"></i> Network Traffic Volume</div>
+              <div class="card-actions">
+                <button class="chip active">24H</button>
+                <button class="chip">7D</button>
+                <button class="chip">30D</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <canvas id="trafficChart" height="100"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-chart-pie"></i> Protocol Distribution</div>
+            </div>
+            <div class="card-body chart-center">
+              <canvas id="protocolChart" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Geo + Recent Events Row -->
+        <div class="chart-row">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-shield-virus"></i> Recent Threat Events</div>
+              <span class="card-badge">Last 10</span>
+            </div>
+            <div class="card-body no-pad">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Source</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentEventsTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-globe"></i> Top Attack Sources</div>
+            </div>
+            <div class="card-body">
+              <div id="geoList"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===== LIVE MONITORING SECTION ===== -->
+      <section class="section" id="section-monitoring">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">Live Network Monitoring</h2>
+            <p class="section-sub">Real-time packet capture and traffic analysis</p>
+          </div>
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span>LIVE — Updating every 3s</span>
+          </div>
+        </div>
+
+        <!-- Mini Stats -->
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <i class="fas fa-arrow-down"></i>
+            <div><span class="mini-val" id="inboundStat">1.24 GB/s</span><span class="mini-lbl">Inbound</span></div>
+          </div>
+          <div class="mini-stat">
+            <i class="fas fa-arrow-up"></i>
+            <div><span class="mini-val" id="outboundStat">842 MB/s</span><span class="mini-lbl">Outbound</span></div>
+          </div>
+          <div class="mini-stat">
+            <i class="fas fa-ban"></i>
+            <div><span class="mini-val" id="blockedStat">1,847</span><span class="mini-lbl">Blocked</span></div>
+          </div>
+          <div class="mini-stat">
+            <i class="fas fa-hourglass-half"></i>
+            <div><span class="mini-val">2.3ms</span><span class="mini-lbl">Avg Latency</span></div>
+          </div>
+        </div>
+
+        <!-- Live Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-wave-square"></i> Live Traffic Stream</div>
+            <div class="card-actions">
+              <div class="live-dot small"></div>
+              <span style="font-size:0.75rem;color:var(--cyan)">Streaming</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <canvas id="liveTrafficChart" height="90"></canvas>
+          </div>
+        </div>
+
+        <!-- Traffic Table -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-table"></i> Packet Capture Log</div>
+            <div class="card-actions">
+              <div class="search-mini">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" placeholder="Filter..." id="tableFilter" />
+              </div>
+              <button class="btn-sm"><i class="fas fa-pause"></i> Pause</button>
+              <button class="btn-sm btn-export"><i class="fas fa-download"></i> Export</button>
+            </div>
+          </div>
+          <div class="card-body no-pad">
+            <table class="data-table traffic-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Timestamp</th>
+                  <th>Source IP</th>
+                  <th>Destination IP</th>
+                  <th>Protocol</th>
+                  <th>Port</th>
+                  <th>Bytes</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="trafficTableBody"></tbody>
+            </table>
+          </div>
+          <div class="card-footer">
+            <span id="tableCount">Showing 20 of 1,284 entries</span>
+            <div class="pagination">
+              <button class="pg-btn"><i class="fas fa-angle-left"></i></button>
+              <button class="pg-btn active">1</button>
+              <button class="pg-btn">2</button>
+              <button class="pg-btn">3</button>
+              <button class="pg-btn"><i class="fas fa-angle-right"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== THREAT ANALYSIS SECTION ===== -->
+      <section class="section" id="section-threats">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">Threat Analysis</h2>
+            <p class="section-sub">AI-powered threat classification and risk assessment</p>
+          </div>
+          <div class="ai-badge"><i class="fas fa-microchip"></i> AI Engine Active</div>
+        </div>
+
+        <!-- Risk Score -->
+        <div class="threat-top-row">
+          <div class="card risk-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-crosshairs"></i> Overall Risk Score</div>
+            </div>
+            <div class="card-body chart-center">
+              <canvas id="riskGauge" width="220" height="130"></canvas>
+              <div class="gauge-label">
+                <span class="gauge-score" id="gaugeScore">64</span>
+                <span class="gauge-text">MEDIUM RISK</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-chart-bar"></i> Attack Distribution</div>
+            </div>
+            <div class="card-body">
+              <canvas id="attackChart" height="160"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-layer-group"></i> Severity Breakdown</div>
+            </div>
+            <div class="card-body chart-center">
+              <canvas id="severityChart" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Threat Intelligence Feed -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-robot"></i> AI Threat Intelligence Feed</div>
+            <div class="card-actions">
+              <span class="chip active">All</span>
+              <span class="chip">Critical</span>
+              <span class="chip">High</span>
+              <span class="chip">Medium</span>
+            </div>
+          </div>
+          <div class="card-body no-pad">
+            <div id="threatFeed" class="threat-feed"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ALERTS CENTER SECTION ===== -->
+      <section class="section" id="section-alerts">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">Alerts Center</h2>
+            <p class="section-sub">Real-time security notifications and incident management</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-outline"><i class="fas fa-check-double"></i> Mark All Read</button>
+            <button class="btn-primary"><i class="fas fa-filter"></i> Filter</button>
+          </div>
+        </div>
+
+        <div class="alerts-layout">
+          <!-- Left: Alert List -->
+          <div class="alerts-list-col">
+            <div class="alert-filter-tabs">
+              <button class="filter-tab active" data-filter="all">All <span class="fc">47</span></button>
+              <button class="filter-tab" data-filter="critical">Critical <span class="fc red">12</span></button>
+              <button class="filter-tab" data-filter="warning">Warning <span class="fc orange">23</span></button>
+              <button class="filter-tab" data-filter="info">Info <span class="fc">12</span></button>
+            </div>
+            <div id="alertsList" class="alerts-list"></div>
+          </div>
+
+          <!-- Right: Timeline + Stats -->
+          <div class="alerts-right-col">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Alert Timeline</div>
+              </div>
+              <div class="card-body">
+                <canvas id="alertTimeline" height="150"></canvas>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fas fa-chart-simple"></i> Alert Statistics</div>
+              </div>
+              <div class="card-body">
+                <div class="alert-stats-grid">
+                  <div class="alert-stat-item">
+                    <div class="asi-val red">12</div>
+                    <div class="asi-lbl">Critical</div>
+                  </div>
+                  <div class="alert-stat-item">
+                    <div class="asi-val orange">23</div>
+                    <div class="asi-lbl">Warning</div>
+                  </div>
+                  <div class="alert-stat-item">
+                    <div class="asi-val cyan">12</div>
+                    <div class="asi-lbl">Info</div>
+                  </div>
+                  <div class="alert-stat-item">
+                    <div class="asi-val green">31</div>
+                    <div class="asi-lbl">Resolved</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REPORTS SECTION ===== -->
+      <section class="section" id="section-reports">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">Reports</h2>
+            <p class="section-sub">Generate and download security intelligence reports</p>
+          </div>
+          <button class="btn-primary"><i class="fas fa-plus"></i> Generate Report</button>
+        </div>
+
+        <div class="report-stats-row">
+          <div class="card report-stat-card">
+            <div class="rsc-icon blue"><i class="fas fa-file-shield"></i></div>
+            <div class="rsc-info">
+              <div class="rsc-val">148</div>
+              <div class="rsc-lbl">Total Reports</div>
+            </div>
+          </div>
+          <div class="card report-stat-card">
+            <div class="rsc-icon cyan"><i class="fas fa-calendar-check"></i></div>
+            <div class="rsc-info">
+              <div class="rsc-val">24</div>
+              <div class="rsc-lbl">This Month</div>
+            </div>
+          </div>
+          <div class="card report-stat-card">
+            <div class="rsc-icon orange"><i class="fas fa-circle-exclamation"></i></div>
+            <div class="rsc-info">
+              <div class="rsc-val">7</div>
+              <div class="rsc-lbl">Incident Reports</div>
+            </div>
+          </div>
+          <div class="card report-stat-card">
+            <div class="rsc-icon green"><i class="fas fa-circle-check"></i></div>
+            <div class="rsc-info">
+              <div class="rsc-val">98.2%</div>
+              <div class="rsc-lbl">Compliance Score</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="report-row">
+          <div class="card wide">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-chart-line"></i> Monthly Threat Summary</div>
+            </div>
+            <div class="card-body">
+              <canvas id="reportChart" height="120"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report List -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-folder-open"></i> Available Reports</div>
+            <div class="card-actions">
+              <div class="search-mini">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search reports..." />
+              </div>
+            </div>
+          </div>
+          <div class="card-body no-pad">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Report Name</th>
+                  <th>Type</th>
+                  <th>Generated</th>
+                  <th>Size</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SYSTEM HEALTH SECTION ===== -->
+      <section class="section" id="section-health">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title">System Health</h2>
+            <p class="section-sub">Infrastructure monitoring and resource utilization</p>
+          </div>
+          <div class="uptime-badge"><i class="fas fa-server"></i> Uptime: 99.97%</div>
+        </div>
+
+        <!-- Health Cards -->
+        <div class="health-grid">
+          <div class="card health-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-microchip"></i> CPU Usage</div>
+              <span class="health-badge ok">Normal</span>
+            </div>
+            <div class="card-body">
+              <div class="health-gauge-wrap">
+                <canvas id="cpuGauge" width="160" height="100"></canvas>
+                <div class="hg-label">
+                  <span class="hg-val" id="cpuVal">67%</span>
+                  <span class="hg-lbl">8 cores active</span>
+                </div>
+              </div>
+              <canvas id="cpuHistory" height="60" class="history-chart"></canvas>
+            </div>
+          </div>
+          <div class="card health-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-memory"></i> Memory Usage</div>
+              <span class="health-badge warning">High</span>
+            </div>
+            <div class="card-body">
+              <div class="health-gauge-wrap">
+                <canvas id="memGauge" width="160" height="100"></canvas>
+                <div class="hg-label">
+                  <span class="hg-val" id="memVal">82%</span>
+                  <span class="hg-lbl">26.2 / 32 GB</span>
+                </div>
+              </div>
+              <canvas id="memHistory" height="60" class="history-chart"></canvas>
+            </div>
+          </div>
+          <div class="card health-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-server"></i> Network Load</div>
+              <span class="health-badge ok">Normal</span>
+            </div>
+            <div class="card-body">
+              <div class="health-gauge-wrap">
+                <canvas id="netGauge" width="160" height="100"></canvas>
+                <div class="hg-label">
+                  <span class="hg-val" id="netVal">45%</span>
+                  <span class="hg-lbl">4.5 / 10 Gbps</span>
+                </div>
+              </div>
+              <canvas id="netHistory" height="60" class="history-chart"></canvas>
+            </div>
+          </div>
+          <div class="card health-card">
+            <div class="card-header">
+              <div class="card-title"><i class="fas fa-hard-drive"></i> Disk I/O</div>
+              <span class="health-badge ok">Normal</span>
+            </div>
+            <div class="card-body">
+              <div class="health-gauge-wrap">
+                <canvas id="diskGauge" width="160" height="100"></canvas>
+                <div class="hg-label">
+                  <span class="hg-val" id="diskVal">38%</span>
+                  <span class="hg-lbl">3.8 TB / 10 TB</span>
+                </div>
+              </div>
+              <canvas id="diskHistory" height="60" class="history-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services Status -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-list-check"></i> Service Status</div>
+          </div>
+          <div class="card-body">
+            <div id="servicesList" class="services-list"></div>
+          </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-terminal"></i> System Logs</div>
+            <div class="card-actions">
+              <button class="btn-sm"><i class="fas fa-rotate"></i> Refresh</button>
+            </div>
+          </div>
+          <div class="card-body no-pad">
+            <div id="systemLogs" class="log-console"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-box">
+      <div class="falcon-loader">
+        <div class="loader-ring"></div>
+        <div class="loader-ring delay1"></div>
+        <div class="loader-ring delay2"></div>
+        <i class="fas fa-shield-halved loader-icon"></i>
+      </div>
+      <div class="loader-text">FALCON</div>
+      <div class="loader-sub">Initializing AI Threat Engine...</div>
+      <div class="loader-bar"><div class="loader-progress" id="loaderProgress"></div></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
