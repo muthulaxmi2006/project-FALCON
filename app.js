@@ -145,23 +145,23 @@ async function initDashboard() {
   initNav();
   buildTicker();
 
-  // Check if Python backend is running
   const online = await checkBackend();
 
+  // Always build chart skeletons first (they need canvas to exist)
+  buildSparklines();
+  buildTrafficChart();
+  buildProtocolChart();
+
   if (online) {
-    await loadRealOverview();
-    buildSparklines();
-    buildTrafficChart();
-    buildProtocolChart();
+    // ---- REAL DATA ----
+    await refreshOverviewStats();
     await loadRealRecentThreats();
-    buildGeoList();
+    await loadRealGeoConnections();
+    await loadRealTrafficChart();
     startRealDataPolling();
   } else {
-    // Fallback demo mode if backend not running
+    // ---- DEMO FALLBACK ----
     animateCounters();
-    buildSparklines();
-    buildTrafficChart();
-    buildProtocolChart();
     buildRecentEventsTable();
     buildGeoList();
     startLiveUpdates();
@@ -216,10 +216,10 @@ function animateCounters() {
 // ============================================================
 function buildSparklines() {
   const configs = [
-    { id: 'spark1', color: '#0a84ff', data: [40,55,45,62,58,70,65,72,68,80] },
-    { id: 'spark2', color: '#00d4ff', data: [30,35,40,38,45,50,48,55,52,60] },
-    { id: 'spark3', color: '#ff9d00', data: [10,15,12,20,25,18,30,22,28,35] },
-    { id: 'spark4', color: '#ff3b5c', data: [5,3,7,4,8,6,10,8,11,12] },
+    { id: 'spark1', color: '#1565c0', data: [40,55,45,62,58,70,65,72,68,80] },
+    { id: 'spark2', color: '#0288d1', data: [30,35,40,38,45,50,48,55,52,60] },
+    { id: 'spark3', color: '#e65100', data: [10,15,12,20,25,18,30,22,28,35] },
+    { id: 'spark4', color: '#c62828', data: [5,3,7,4,8,6,10,8,11,12] },
   ];
   configs.forEach(cfg => {
     const ctx = $(`#${cfg.id}`).getContext('2d');
@@ -252,23 +252,23 @@ function buildTrafficChart() {
 
   const ctx = $('#trafficChart').getContext('2d');
   const g1 = ctx.createLinearGradient(0, 0, 0, 200);
-  g1.addColorStop(0, 'rgba(10,132,255,0.25)');
-  g1.addColorStop(1, 'rgba(10,132,255,0)');
+  g1.addColorStop(0, 'rgba(21,101,192,0.18)');
+  g1.addColorStop(1, 'rgba(21,101,192,0)');
   const g2 = ctx.createLinearGradient(0, 0, 0, 200);
-  g2.addColorStop(0, 'rgba(255,59,92,0.2)');
-  g2.addColorStop(1, 'rgba(255,59,92,0)');
+  g2.addColorStop(0, 'rgba(198,40,40,0.15)');
+  g2.addColorStop(1, 'rgba(198,40,40,0)');
 
   window._trafficChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [
-        { label: 'Legitimate Traffic', data: legit, borderColor: '#0a84ff', borderWidth: 2.5,
+        { label: 'Legitimate Traffic', data: legit, borderColor: '#1565c0', borderWidth: 2.5,
           backgroundColor: g1, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#0a84ff' },
-        { label: 'Threat Traffic', data: threat, borderColor: '#ff3b5c', borderWidth: 2,
+          pointHoverBackgroundColor: '#1565c0' },
+        { label: 'Threat Traffic', data: threat, borderColor: '#c62828', borderWidth: 2,
           backgroundColor: g2, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#ff3b5c' }
+          pointHoverBackgroundColor: '#c62828' }
       ]
     },
     options: {
@@ -276,19 +276,12 @@ function buildTrafficChart() {
       animation: { duration: 800 },
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#7a9fc0', font: { size: 12 }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
-        tooltip: {
-          backgroundColor: 'rgba(6,15,30,0.95)',
-          borderColor: 'rgba(0,212,255,0.2)',
-          borderWidth: 1,
-          titleColor: '#e8f4ff',
-          bodyColor: '#7a9fc0',
-          padding: 12,
-        }
+        legend: { labels: { color: '#2c5282', font: { size: 12 }, boxWidth: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1, titleColor: '#0d1b2a', bodyColor: '#2c5282', padding: 12 }
       },
       scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', maxTicksLimit: 12, font: { size: 11 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', font: { size: 11 } }, beginAtZero: true }
+        x: { grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', maxTicksLimit: 12, font: { size: 11 } } },
+        y: { grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', font: { size: 11 } }, beginAtZero: true }
       }
     }
   });
@@ -305,8 +298,8 @@ function buildProtocolChart() {
       labels: ['HTTPS', 'HTTP', 'DNS', 'SSH', 'FTP', 'Other'],
       datasets: [{
         data: [42, 18, 15, 10, 7, 8],
-        backgroundColor: ['#0a84ff','#00d4ff','#00e676','#ff9d00','#ff3b5c','#bf5af2'],
-        borderColor: '#0a1628',
+        backgroundColor: ['#1565c0','#0288d1','#2e7d32','#e65100','#c62828','#6a1b9a'],
+        borderColor: '#ffffff',
         borderWidth: 3,
         hoverOffset: 8
       }]
@@ -315,10 +308,10 @@ function buildProtocolChart() {
       responsive: true,
       cutout: '68%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#7a9fc0', font: { size: 11 }, padding: 12, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } },
+        legend: { position: 'bottom', labels: { color: '#2c5282', font: { size: 11 }, padding: 12, boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } },
         tooltip: {
-          backgroundColor: 'rgba(6,15,30,0.95)', borderColor: 'rgba(0,212,255,0.2)', borderWidth: 1,
-          titleColor: '#e8f4ff', bodyColor: '#7a9fc0',
+          backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1,
+          titleColor: '#0d1b2a', bodyColor: '#2c5282',
           callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}%` }
         }
       }
@@ -445,17 +438,17 @@ const liveOutbound = Array.from({ length: 30 }, () => rand(20, 80));
 function buildLiveTrafficChart() {
   const ctx = $('#liveTrafficChart').getContext('2d');
   const g1 = ctx.createLinearGradient(0, 0, 0, 120);
-  g1.addColorStop(0, 'rgba(0,212,255,0.3)'); g1.addColorStop(1, 'rgba(0,212,255,0)');
+  g1.addColorStop(0, 'rgba(2,136,209,0.25)'); g1.addColorStop(1, 'rgba(2,136,209,0)');
   const g2 = ctx.createLinearGradient(0, 0, 0, 120);
-  g2.addColorStop(0, 'rgba(10,132,255,0.2)'); g2.addColorStop(1, 'rgba(10,132,255,0)');
+  g2.addColorStop(0, 'rgba(21,101,192,0.18)'); g2.addColorStop(1, 'rgba(21,101,192,0)');
 
   liveChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: [...LIVE_LABELS],
       datasets: [
-        { label: 'Inbound', data: [...liveInbound], borderColor: '#00d4ff', borderWidth: 2, backgroundColor: g1, fill: true, tension: 0.4, pointRadius: 0 },
-        { label: 'Outbound', data: [...liveOutbound], borderColor: '#0a84ff', borderWidth: 2, backgroundColor: g2, fill: true, tension: 0.4, pointRadius: 0 },
+        { label: 'Inbound', data: [...liveInbound], borderColor: '#0288d1', borderWidth: 2, backgroundColor: g1, fill: true, tension: 0.4, pointRadius: 0 },
+        { label: 'Outbound', data: [...liveOutbound], borderColor: '#1565c0', borderWidth: 2, backgroundColor: g2, fill: true, tension: 0.4, pointRadius: 0 },
       ]
     },
     options: {
@@ -463,12 +456,12 @@ function buildLiveTrafficChart() {
       responsive: true,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#7a9fc0', font: { size: 11 }, boxWidth: 10, usePointStyle: true } },
-        tooltip: { backgroundColor: 'rgba(6,15,30,0.95)', borderColor: 'rgba(0,212,255,0.2)', borderWidth: 1, titleColor: '#e8f4ff', bodyColor: '#7a9fc0' }
+        legend: { labels: { color: '#2c5282', font: { size: 11 }, boxWidth: 10, usePointStyle: true } },
+        tooltip: { backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1, titleColor: '#0d1b2a', bodyColor: '#2c5282' }
       },
       scales: {
         x: { display: false },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', font: { size: 10 } }, beginAtZero: true }
+        y: { grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', font: { size: 10 } }, beginAtZero: true }
       }
     }
   });
@@ -488,8 +481,8 @@ function buildRiskGauge() {
     data: {
       datasets: [{
         data: [score, 100 - score],
-        backgroundColor: ['#ff9d00', 'rgba(255,255,255,0.04)'],
-        borderColor: ['#ff9d00', 'transparent'],
+        backgroundColor: ['#e65100', 'rgba(21,101,192,0.08)'],
+        borderColor: ['#e65100', 'transparent'],
         borderWidth: [3, 0],
         hoverOffset: 0,
       }]
@@ -517,10 +510,10 @@ function buildAttackChart() {
         label: 'Incidents',
         data,
         backgroundColor: data.map((v, i) => {
-          const colors = ['rgba(255,59,92,0.7)','rgba(255,157,0,0.7)','rgba(255,59,92,0.5)','rgba(255,157,0,0.5)','rgba(255,214,0,0.6)','rgba(0,212,255,0.5)','rgba(10,132,255,0.5)'];
+          const colors = ['rgba(198,40,40,0.7)','rgba(230,81,0,0.7)','rgba(198,40,40,0.5)','rgba(230,81,0,0.5)','rgba(21,101,192,0.6)','rgba(2,136,209,0.5)','rgba(21,101,192,0.4)'];
           return colors[i];
         }),
-        borderColor: ['#ff3b5c','#ff9d00','#ff3b5c','#ff9d00','#ffd600','#00d4ff','#0a84ff'],
+        borderColor: ['#c62828','#e65100','#c62828','#e65100','#1565c0','#0288d1','#1565c0'],
         borderWidth: 1,
         borderRadius: 4,
       }]
@@ -530,11 +523,11 @@ function buildAttackChart() {
       responsive: true,
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: 'rgba(6,15,30,0.95)', borderColor: 'rgba(0,212,255,0.2)', borderWidth: 1, titleColor: '#e8f4ff', bodyColor: '#7a9fc0' }
+        tooltip: { backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1, titleColor: '#0d1b2a', bodyColor: '#2c5282' }
       },
       scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', font: { size: 10 } } },
-        y: { grid: { display: false }, ticks: { color: '#7a9fc0', font: { size: 11 } } }
+        x: { grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: '#2c5282', font: { size: 11 } } }
       }
     }
   });
@@ -548,8 +541,8 @@ function buildSeverityChart() {
       labels: ['Critical','High','Medium','Low'],
       datasets: [{
         data: [12, 34, 89, 212],
-        backgroundColor: ['#ff3b5c','#ff9d00','#ffd600','#00e676'],
-        borderColor: '#0a1628',
+        backgroundColor: ['#c62828','#e65100','#f57f17','#2e7d32'],
+        borderColor: '#ffffff',
         borderWidth: 3,
         hoverOffset: 6,
       }]
@@ -558,8 +551,8 @@ function buildSeverityChart() {
       responsive: true,
       cutout: '60%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#7a9fc0', font: { size: 11 }, boxWidth: 10, usePointStyle: true, padding: 10 } },
-        tooltip: { backgroundColor: 'rgba(6,15,30,0.95)', borderColor: 'rgba(0,212,255,0.2)', borderWidth: 1, titleColor: '#e8f4ff', bodyColor: '#7a9fc0' }
+        legend: { position: 'bottom', labels: { color: '#2c5282', font: { size: 11 }, boxWidth: 10, usePointStyle: true, padding: 10 } },
+        tooltip: { backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1, titleColor: '#0d1b2a', bodyColor: '#2c5282' }
       }
     }
   });
@@ -627,7 +620,7 @@ function renderAlerts(filter) {
   const list = $('#alertsList');
   const filtered = filter === 'all' ? ALERTS_DATA : ALERTS_DATA.filter(a => a.type === filter);
   const colorMap = { critical: 'red', warning: 'orange', info: 'blue' };
-  const bgMap    = { critical: 'rgba(255,59,92,0.1)', warning: 'rgba(255,157,0,0.1)', info: 'rgba(10,132,255,0.1)' };
+  const bgMap    = { critical: 'rgba(198,40,40,0.08)', warning: 'rgba(230,81,0,0.08)', info: 'rgba(21,101,192,0.08)' };
 
   list.innerHTML = filtered.map(a => `
     <div class="alert-card ${a.unread ? 'unread ' : ''}${a.type}">
@@ -654,20 +647,20 @@ function buildAlertTimeline() {
     data: {
       labels: hours,
       datasets: [
-        { label: 'Critical', data: [3,1,0,2,4,2,1,5,3,2,4,3], backgroundColor: 'rgba(255,59,92,0.7)', borderRadius: 3 },
-        { label: 'Warning',  data: [6,4,2,5,8,6,4,9,7,5,8,6], backgroundColor: 'rgba(255,157,0,0.6)',  borderRadius: 3 },
-        { label: 'Info',     data: [2,3,1,4,3,2,3,4,2,3,2,4], backgroundColor: 'rgba(0,212,255,0.4)',  borderRadius: 3 },
+        { label: 'Critical', data: [3,1,0,2,4,2,1,5,3,2,4,3], backgroundColor: 'rgba(198,40,40,0.7)', borderRadius: 3 },
+        { label: 'Warning',  data: [6,4,2,5,8,6,4,9,7,5,8,6], backgroundColor: 'rgba(230,81,0,0.6)',  borderRadius: 3 },
+        { label: 'Info',     data: [2,3,1,4,3,2,3,4,2,3,2,4], backgroundColor: 'rgba(21,101,192,0.5)',  borderRadius: 3 },
       ]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { labels: { color: '#7a9fc0', font: { size: 11 }, boxWidth: 10, usePointStyle: true } },
-        tooltip: { backgroundColor: 'rgba(6,15,30,0.95)', borderColor: 'rgba(0,212,255,0.2)', borderWidth: 1, titleColor: '#e8f4ff', bodyColor: '#7a9fc0' }
+        legend: { labels: { color: '#2c5282', font: { size: 11 }, boxWidth: 10, usePointStyle: true } },
+        tooltip: { backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1, titleColor: '#0d1b2a', bodyColor: '#2c5282' }
       },
       scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: '#3d5a78', font: { size: 10 } } },
-        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', font: { size: 10 } } }
+        x: { stacked: true, grid: { display: false }, ticks: { color: '#7a9fc0', font: { size: 10 } } },
+        y: { stacked: true, grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', font: { size: 10 } } }
       }
     }
   });
@@ -711,7 +704,7 @@ function buildReportChart() {
   const ctx = $('#reportChart').getContext('2d');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const g1 = ctx.createLinearGradient(0, 0, 0, 150);
-  g1.addColorStop(0, 'rgba(10,132,255,0.3)'); g1.addColorStop(1, 'rgba(10,132,255,0)');
+  g1.addColorStop(0, 'rgba(21,101,192,0.3)'); g1.addColorStop(1, 'rgba(21,101,192,0)');
 
   new Chart(ctx, {
     type: 'line',
@@ -720,24 +713,24 @@ function buildReportChart() {
       datasets: [{
         label: 'Total Threats',
         data: [145,189,167,234,198,276,312,289,341,298,367,347],
-        borderColor: '#0a84ff', borderWidth: 2.5, backgroundColor: g1, fill: true, tension: 0.4, pointRadius: 4,
-        pointBackgroundColor: '#0a84ff', pointBorderColor: '#0a1628', pointBorderWidth: 2,
+        borderColor: '#1565c0', borderWidth: 2.5, backgroundColor: g1, fill: true, tension: 0.4, pointRadius: 4,
+        pointBackgroundColor: '#1565c0', pointBorderColor: '#ffffff', pointBorderWidth: 2,
       },{
         label: 'Resolved',
         data: [138,175,155,218,182,255,289,265,318,275,342,320],
-        borderColor: '#00e676', borderWidth: 2, backgroundColor: 'transparent', fill: false, tension: 0.4, pointRadius: 4,
-        pointBackgroundColor: '#00e676', pointBorderColor: '#0a1628', pointBorderWidth: 2,
+        borderColor: '#2e7d32', borderWidth: 2, backgroundColor: 'transparent', fill: false, tension: 0.4, pointRadius: 4,
+        pointBackgroundColor: '#2e7d32', pointBorderColor: '#ffffff', pointBorderWidth: 2,
       }]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { labels: { color: '#7a9fc0', font: { size: 12 }, boxWidth: 10, usePointStyle: true } },
-        tooltip: { backgroundColor: 'rgba(6,15,30,0.95)', borderColor: 'rgba(0,212,255,0.2)', borderWidth: 1, titleColor: '#e8f4ff', bodyColor: '#7a9fc0' }
+        legend: { labels: { color: '#2c5282', font: { size: 12 }, boxWidth: 10, usePointStyle: true } },
+        tooltip: { backgroundColor: '#ffffff', borderColor: '#d0e4f7', borderWidth: 1, titleColor: '#0d1b2a', bodyColor: '#2c5282' }
       },
       scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', font: { size: 11 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#3d5a78', font: { size: 11 } } }
+        x: { grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(21,101,192,0.06)' }, ticks: { color: '#7a9fc0', font: { size: 11 } } }
       }
     }
   });
@@ -763,7 +756,7 @@ function drawGauge(canvasId, value, color) {
   // BG arc
   ctx.beginPath();
   ctx.arc(cx, cy, r, startAngle, endAngle);
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = 'rgba(21,101,192,0.1)';
   ctx.lineWidth = 12;
   ctx.lineCap = 'round';
   ctx.stroke();
@@ -782,8 +775,8 @@ function drawGauge(canvasId, value, color) {
   // Glow
   ctx.beginPath();
   ctx.arc(cx, cy, r, startAngle, valAngle);
-  ctx.strokeStyle = color + '44';
-  ctx.lineWidth = 20;
+  ctx.strokeStyle = color + '22';
+  ctx.lineWidth = 18;
   ctx.lineCap = 'round';
   ctx.stroke();
 }
@@ -807,27 +800,27 @@ function buildHealthHistoryChart(canvasId, color, data) {
 }
 
 function buildSystemHealth() {
-  drawGauge('cpuGauge',  67, '#0a84ff');
-  drawGauge('memGauge',  82, '#ff9d00');
-  drawGauge('netGauge',  45, '#00d4ff');
-  drawGauge('diskGauge', 38, '#00e676');
+  drawGauge('cpuGauge',  67, '#1565c0');
+  drawGauge('memGauge',  82, '#e65100');
+  drawGauge('netGauge',  45, '#0288d1');
+  drawGauge('diskGauge', 38, '#2e7d32');
 
-  buildHealthHistoryChart('cpuHistory', '#0a84ff', [55,60,58,65,70,67,72,65,68,67,70,67]);
-  buildHealthHistoryChart('memHistory', '#ff9d00', [75,77,76,79,81,80,83,82,84,82,83,82]);
-  buildHealthHistoryChart('netHistory', '#00d4ff', [30,35,40,38,42,45,43,46,44,47,45,45]);
-  buildHealthHistoryChart('diskHistory','#00e676', [35,36,36,37,38,37,38,39,38,38,38,38]);
+  buildHealthHistoryChart('cpuHistory', '#1565c0', [55,60,58,65,70,67,72,65,68,67,70,67]);
+  buildHealthHistoryChart('memHistory', '#e65100', [75,77,76,79,81,80,83,82,84,82,83,82]);
+  buildHealthHistoryChart('netHistory', '#0288d1', [30,35,40,38,42,45,43,46,44,47,45,45]);
+  buildHealthHistoryChart('diskHistory','#2e7d32', [35,36,36,37,38,37,38,39,38,38,38,38]);
 }
 
 // ============================================================
 // SERVICES
 // ============================================================
 const SERVICES = [
-  { icon: 'fa-shield-halved', name: 'IDS/IPS Engine',       meta: 'Snort 3.1.45 | 14,392 rules active', uptime: 99.98, color: '#0a84ff' },
-  { icon: 'fa-fire-flame-curved', name: 'Firewall Service', meta: 'iptables v1.8 | 847 active rules',   uptime: 100,   color: '#00d4ff' },
-  { icon: 'fa-eye',           name: 'SIEM Correlation',     meta: 'Splunk 9.2 | 2.4M events/day',      uptime: 99.7,  color: '#00e676' },
-  { icon: 'fa-robot',         name: 'AI Threat Engine',     meta: 'FALCON ML v4.2 | 98.3% accuracy',   uptime: 99.9,  color: '#bf5af2' },
-  { icon: 'fa-virus-slash',   name: 'Antivirus Scanner',    meta: 'ClamAV 1.3 | DB: 2024-12-21',      uptime: 100,   color: '#00e676' },
-  { icon: 'fa-database',      name: 'Log Aggregator',       meta: 'Elasticsearch 8.11 | 3.2 TB indexed', uptime: 99.95, color: '#ff9d00' },
+  { icon: 'fa-shield-halved', name: 'IDS/IPS Engine',       meta: 'Snort 3.1.45 | 14,392 rules active', uptime: 99.98, color: '#1565c0' },
+  { icon: 'fa-fire-flame-curved', name: 'Firewall Service', meta: 'iptables v1.8 | 847 active rules',   uptime: 100,   color: '#0288d1' },
+  { icon: 'fa-eye',           name: 'SIEM Correlation',     meta: 'Splunk 9.2 | 2.4M events/day',      uptime: 99.7,  color: '#2e7d32' },
+  { icon: 'fa-robot',         name: 'AI Threat Engine',     meta: 'FALCON ML v4.2 | 98.3% accuracy',   uptime: 99.9,  color: '#6a1b9a' },
+  { icon: 'fa-virus-slash',   name: 'Antivirus Scanner',    meta: 'ClamAV 1.3 | DB: 2024-12-21',      uptime: 100,   color: '#2e7d32' },
+  { icon: 'fa-database',      name: 'Log Aggregator',       meta: 'Elasticsearch 8.11 | 3.2 TB indexed', uptime: 99.95, color: '#e65100' },
 ];
 
 function buildServices() {
@@ -886,32 +879,56 @@ function buildSystemLogs() {
 // ============================================================
 const sectionInited = new Set(['overview']);
 
-function initSectionCharts(section) {
+async function initSectionCharts(section) {
   if (sectionInited.has(section)) return;
   sectionInited.add(section);
 
   if (section === 'monitoring') {
-    buildTrafficTable();
     if (!liveChart) buildLiveTrafficChart();
+    if (backendOnline) {
+      await loadRealConnections();
+      await loadRealMiniStats();
+      await loadRealLiveChart();
+    } else {
+      buildTrafficTable();
+    }
   }
+
   if (section === 'threats') {
-    buildThreatFeed();
     buildRiskGauge();
     buildAttackChart();
     buildSeverityChart();
+    if (backendOnline) {
+      await loadRealThreatFeed();
+      await loadRealThreatSummary();
+    } else {
+      buildThreatFeed();
+    }
   }
+
   if (section === 'alerts') {
-    buildAlerts();
     buildAlertTimeline();
+    if (backendOnline) {
+      await loadRealAlerts();
+    } else {
+      buildAlerts();
+    }
   }
+
   if (section === 'reports') {
     buildReports();
     buildReportChart();
   }
+
   if (section === 'health') {
     buildSystemHealth();
     buildServices();
-    buildSystemLogs();
+    if (backendOnline) {
+      await loadRealHealth();
+      await loadRealProcessLogs();
+    } else {
+      buildSystemLogs();
+    }
   }
 }
 
@@ -954,7 +971,7 @@ function startLiveUpdates() {
     newRow.innerHTML = generateRow(rand(1, 9999));
     const tr = newRow.querySelector('tr');
     tr.style.animation = 'fadeSlide 0.3s ease';
-    tr.style.background = 'rgba(0,212,255,0.04)';
+    tr.style.background = 'rgba(21,101,192,0.06)';
     setTimeout(() => tr.style.background = '', 600);
     tbody.prepend(tr);
   }, 5000);
@@ -964,7 +981,7 @@ function startLiveUpdates() {
   setInterval(() => {
     cpuTick = Math.min(100, Math.max(10, cpuTick + rand(-4, 6)));
     const el = $('#cpuVal');
-    if (el) { el.textContent = cpuTick + '%'; drawGauge('cpuGauge', cpuTick, '#0a84ff'); }
+    if (el) { el.textContent = cpuTick + '%'; drawGauge('cpuGauge', cpuTick, '#1565c0'); }
     const hc = healthCharts['cpuHistory'];
     if (hc) { hc.data.datasets[0].data.shift(); hc.data.datasets[0].data.push(cpuTick); hc.update('none'); }
   }, 2500);
@@ -973,7 +990,7 @@ function startLiveUpdates() {
   setInterval(() => {
     memTick = Math.min(98, Math.max(60, memTick + rand(-2, 3)));
     const el = $('#memVal');
-    if (el) { el.textContent = memTick + '%'; drawGauge('memGauge', memTick, '#ff9d00'); }
+    if (el) { el.textContent = memTick + '%'; drawGauge('memGauge', memTick, '#e65100'); }
     const hc = healthCharts['memHistory'];
     if (hc) { hc.data.datasets[0].data.shift(); hc.data.datasets[0].data.push(memTick); hc.update('none'); }
   }, 3000);
@@ -1127,21 +1144,21 @@ async function loadRealHealth() {
   // CPU
   const cpuPct = Math.round(data.cpu.percent);
   const cpuEl = $('#cpuVal');
-  if (cpuEl) { cpuEl.textContent = cpuPct + '%'; drawGauge('cpuGauge', cpuPct, '#0a84ff'); }
+  if (cpuEl) { cpuEl.textContent = cpuPct + '%'; drawGauge('cpuGauge', cpuPct, '#1565c0'); }
   const cpuLbl = cpuEl?.closest('.card-body')?.querySelector('.hg-lbl');
   if (cpuLbl) cpuLbl.textContent = `${data.cpu.cores} cores · ${Math.round(data.cpu.freq_mhz)} MHz`;
 
   // Memory
   const memPct = Math.round(data.memory.percent);
   const memEl = $('#memVal');
-  if (memEl) { memEl.textContent = memPct + '%'; drawGauge('memGauge', memPct, '#ff9d00'); }
+  if (memEl) { memEl.textContent = memPct + '%'; drawGauge('memGauge', memPct, '#e65100'); }
   const memLbl = memEl?.closest('.card-body')?.querySelector('.hg-lbl');
   if (memLbl) memLbl.textContent = `${data.memory.used_gb} / ${data.memory.total_gb} GB`;
 
   // Disk
   const diskPct = Math.round(data.disk.percent);
   const diskEl = $('#diskVal');
-  if (diskEl) { diskEl.textContent = diskPct + '%'; drawGauge('diskGauge', diskPct, '#00e676'); }
+  if (diskEl) { diskEl.textContent = diskPct + '%'; drawGauge('diskGauge', diskPct, '#2e7d32'); }
   const diskLbl = diskEl?.closest('.card-body')?.querySelector('.hg-lbl');
   if (diskLbl) diskLbl.textContent = `${data.disk.used_gb} / ${data.disk.total_gb} GB`;
 
@@ -1153,7 +1170,7 @@ async function loadRealHealth() {
     const totalRate = (last.bytes_recv - prev.bytes_recv + last.bytes_sent - prev.bytes_sent);
     const netPct = Math.min(100, Math.round(totalRate / 1250000 * 100)); // estimate vs 100Mbps
     const netEl = $('#netVal');
-    if (netEl) { netEl.textContent = netPct + '%'; drawGauge('netGauge', netPct, '#00d4ff'); }
+    if (netEl) { netEl.textContent = netPct + '%'; drawGauge('netGauge', netPct, '#0288d1'); }
     const netLbl = netEl?.closest('.card-body')?.querySelector('.hg-lbl');
     if (netLbl) netLbl.textContent = fmtBytes(totalRate) + ' total';
 
@@ -1249,7 +1266,7 @@ async function loadRealAlerts() {
   const sevToType = { critical: 'critical', high: 'warning', medium: 'warning', low: 'info' };
   const iconMap   = { critical: 'fa-skull', high: 'fa-burst', medium: 'fa-triangle-exclamation', low: 'fa-circle-info' };
   const colorMap  = { critical: 'red', warning: 'orange', info: 'blue' };
-  const bgMap     = { critical: 'rgba(255,59,92,0.1)', warning: 'rgba(255,157,0,0.1)', info: 'rgba(10,132,255,0.1)' };
+  const bgMap     = { critical: 'rgba(198,40,40,0.08)', warning: 'rgba(230,81,0,0.08)', info: 'rgba(21,101,192,0.08)' };
 
   list.innerHTML = data.slice(0, 20).map(t => {
     const type = sevToType[t.severity] || 'info';
@@ -1326,16 +1343,191 @@ function startRealDataPolling() {
   }, 2000);
 }
 
-// Override lazy-init for real mode to load real data
-const _origInitSection = initSectionCharts;
-function initSectionCharts(section) {
-  _origInitSection(section);
-  if (backendOnline) {
-    setTimeout(async () => {
-      if (section === 'monitoring') { await loadRealConnections(); await loadRealMiniStats(); await loadRealLiveChart(); }
-      if (section === 'threats')    { await loadRealThreatFeed(); await loadRealThreatSummary(); }
-      if (section === 'alerts')     { await loadRealAlerts(); }
-      if (section === 'health')     { await loadRealHealth(); }
-    }, 100);
+// end of file
+
+// ============================================================
+// REAL DATA — OVERVIEW STAT CARDS
+// ============================================================
+async function refreshOverviewStats() {
+  const data = await apiFetch('/overview');
+  if (!data) return;
+
+  // Card 1: Total bytes received (real network traffic)
+  const c1 = $('.stat-card:nth-child(1) .stat-value');
+  const c1lbl = $('.stat-card:nth-child(1) .stat-label');
+  if (c1) { animateValue(c1, data.bytes_recv); }
+  if (c1lbl) c1lbl.textContent = 'Bytes Received';
+
+  // Card 2: Active connections
+  const c2 = $('.stat-card:nth-child(2) .stat-value');
+  const c2lbl = $('.stat-card:nth-child(2) .stat-label');
+  if (c2) animateValue(c2, data.active_connections);
+  if (c2lbl) c2lbl.textContent = 'Active Connections';
+
+  // Card 3: Threats detected
+  const c3 = $('.stat-card:nth-child(3) .stat-value');
+  const c3lbl = $('.stat-card:nth-child(3) .stat-label');
+  if (c3) animateValue(c3, data.threats_total);
+  if (c3lbl) c3lbl.textContent = 'Threats Detected';
+
+  // Card 4: Critical threats
+  const c4 = $('.stat-card:nth-child(4) .stat-value');
+  const c4lbl = $('.stat-card:nth-child(4) .stat-label');
+  if (c4) animateValue(c4, data.threats_critical);
+  if (c4lbl) c4lbl.textContent = 'Critical Alerts';
+}
+
+// ============================================================
+// REAL DATA — GEO / CONNECTIONS from real IP data
+// ============================================================
+async function loadRealGeoConnections() {
+  const conns = await apiFetch('/connections');
+  const el = $('#geoList');
+  if (!el) return;
+
+  if (!conns || conns.length === 0) {
+    buildGeoList(); // fallback
+    return;
   }
+
+  // Count unique remote IPs and group by first octet (rough geo)
+  const ipCount = {};
+  conns.forEach(c => {
+    if (c.remote_ip) ipCount[c.remote_ip] = (ipCount[c.remote_ip] || 0) + 1;
+  });
+
+  // Get top 7 IPs
+  const top = Object.entries(ipCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 7);
+
+  if (top.length === 0) { buildGeoList(); return; }
+
+  const maxCount = top[0][1];
+  el.innerHTML = top.map(([ip, count]) => {
+    const pct = Math.round((count / maxCount) * 100);
+    const process = conns.find(c => c.remote_ip === ip)?.process || '';
+    return `
+      <div class="geo-item">
+        <div class="geo-flag" style="font-family:monospace;font-size:0.75rem;color:var(--blue);width:auto;min-width:28px">${ip.split('.')[0]}.*</div>
+        <div class="geo-bar-wrap">
+          <div class="geo-label">
+            <span class="geo-country">${ip} ${process ? '('+process+')' : ''}</span>
+            <span class="geo-count">${count} conn${count>1?'s':''}</span>
+          </div>
+          <div class="geo-bar"><div class="geo-fill" style="width:0%" data-w="${pct}"></div></div>
+        </div>
+      </div>`;
+  }).join('');
+
+  setTimeout(() => {
+    $$('.geo-fill').forEach(e => e.style.width = e.dataset.w + '%');
+  }, 200);
+}
+
+// ============================================================
+// REAL DATA — TRAFFIC CHART (from real history)
+// ============================================================
+async function loadRealTrafficChart() {
+  const hist = await apiFetch('/stats/history');
+  if (!hist || hist.length < 2 || !window._trafficChart) return;
+
+  // Build per-second KB values from cumulative bytes
+  const labels = hist.map((_, i) => {
+    const d = new Date(Date.now() - (hist.length - i) * 2000);
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  });
+
+  const recv = hist.map((h, i) => {
+    if (i === 0) return 0;
+    return Math.max(0, Math.round((h.bytes_recv - hist[i-1].bytes_recv) / 1024));
+  });
+  const sent = hist.map((h, i) => {
+    if (i === 0) return 0;
+    return Math.max(0, Math.round((h.bytes_sent - hist[i-1].bytes_sent) / 1024));
+  });
+
+  window._trafficChart.data.labels = labels;
+  window._trafficChart.data.datasets[0].data = recv;
+  window._trafficChart.data.datasets[0].label = 'Inbound (KB/s)';
+  window._trafficChart.data.datasets[1].data = sent;
+  window._trafficChart.data.datasets[1].label = 'Outbound (KB/s)';
+  window._trafficChart.update();
+}
+
+// ============================================================
+// REAL DATA — PROCESS LOGS (System Health logs)
+// ============================================================
+async function loadRealProcessLogs() {
+  const procs = await apiFetch('/processes');
+  const logEl = $('#systemLogs');
+  if (!logEl || !procs) { buildSystemLogs(); return; }
+
+  const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+  const lines = procs.slice(0, 15).map(p => {
+    const cpu = (p.cpu_percent || 0).toFixed(1);
+    const mem = (p.memory_percent || 0).toFixed(1);
+    const level = cpu > 50 ? 'warn' : cpu > 80 ? 'error' : 'info';
+    const label = { info: 'INFO', warn: 'WARN', error: 'ERROR' }[level];
+    return `<div class="log-line">
+      <span class="log-ts">${now}</span>
+      <span class="log-level ${level}">[${label}]</span>
+      <span class="log-msg">PID ${p.pid || '?'} · <b style="color:#e2e8f0">${p.name || 'unknown'}</b> · CPU: ${cpu}% · MEM: ${mem}%</span>
+    </div>`;
+  });
+  logEl.innerHTML = lines.join('');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ============================================================
+// POLLING — refreshes real data every few seconds
+// ============================================================
+function startRealDataPolling() {
+  // Overview stats every 4s
+  setInterval(async () => {
+    const ok = await checkBackend();
+    if (ok) await refreshOverviewStats();
+  }, 4000);
+
+  // Live chart every 2s
+  setInterval(async () => {
+    if (backendOnline) await loadRealLiveChart();
+  }, 2000);
+
+  // Monitoring section every 3s
+  setInterval(async () => {
+    if (!backendOnline) return;
+    if ($('#section-monitoring.active')) {
+      await loadRealConnections();
+      await loadRealMiniStats();
+      await loadRealLiveChart();
+    }
+  }, 3000);
+
+  // Health section every 3s
+  setInterval(async () => {
+    if (!backendOnline) return;
+    if ($('#section-health.active')) {
+      await loadRealHealth();
+      await loadRealProcessLogs();
+    }
+  }, 3000);
+
+  // Threats + alerts every 5s
+  setInterval(async () => {
+    if (!backendOnline) return;
+    await loadRealRecentThreats();
+    if ($('#section-threats.active')) {
+      await loadRealThreatFeed();
+      await loadRealThreatSummary();
+    }
+    if ($('#section-alerts.active')) await loadRealAlerts();
+  }, 5000);
+
+  // Traffic chart + geo every 6s
+  setInterval(async () => {
+    if (!backendOnline) return;
+    await loadRealTrafficChart();
+    await loadRealGeoConnections();
+  }, 6000);
 }

@@ -2,6 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <style>
+    /* Hide everything until auth check passes */
+    body { visibility: hidden; }
+  </style>
+  <script>
+    (function() {
+      if (window.location.protocol === 'file:') {
+        // Replace page immediately — no flash
+        document.addEventListener('DOMContentLoaded', function() {
+          document.body.style.visibility = 'visible';
+          document.body.style.cssText = 'margin:0;padding:0;background:#050c15;visibility:visible;';
+          document.body.innerHTML = `
+            <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+                 font-family:'Segoe UI',sans-serif;text-align:center;padding:20px">
+              <div style="background:#0a1628;border:1px solid rgba(0,212,255,0.2);border-radius:16px;
+                   padding:48px 40px;max-width:460px;box-shadow:0 0 60px rgba(0,132,255,0.1)">
+                <div style="font-size:3rem;margin-bottom:16px">🛡️</div>
+                <div style="font-size:1.5rem;font-weight:800;letter-spacing:4px;
+                     background:linear-gradient(90deg,#0a84ff,#00d4ff);
+                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                     margin-bottom:10px">FALCON</div>
+                <div style="color:#ff3b5c;font-size:0.95rem;font-weight:600;margin-bottom:14px">
+                  ⚠ Direct file access is blocked
+                </div>
+                <div style="color:#7a9fc0;font-size:0.83rem;line-height:1.8;margin-bottom:26px">
+                  This project only runs through the local server.<br>
+                  Open a terminal in the project folder and run:
+                </div>
+                <div style="background:#020812;border:1px solid rgba(0,212,255,0.15);
+                     border-radius:8px;padding:12px 20px;font-family:'Courier New',monospace;
+                     color:#00d4ff;font-size:0.9rem;letter-spacing:1px;margin-bottom:26px">
+                  python server.py
+                </div>
+                <div style="color:#3d5a78;font-size:0.78rem;margin-bottom:6px">then open your browser at</div>
+                <a href="http://localhost:5000" style="color:#00d4ff;font-weight:700;
+                   font-size:0.95rem;text-decoration:none;letter-spacing:0.5px">
+                  http://localhost:5000
+                </a>
+              </div>
+            </div>`;
+        });
+      } else {
+        // Localhost — show page normally
+        document.addEventListener('DOMContentLoaded', function() {
+          document.body.style.visibility = 'visible';
+        });
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project FALCON – AI-Powered Network Intrusion Detection</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -71,7 +120,18 @@
         <div class="status-dot online"></div>
         <span>System Online</span>
       </div>
-      <div class="version">v4.2.1</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="version">v4.2.1</div>
+        <button onclick="sessionStorage.removeItem('falcon_auth');window.location.href='/login.html'"
+          title="Logout"
+          style="background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.25);
+                 color:#ff3b5c;border-radius:6px;padding:4px 9px;font-size:0.72rem;
+                 cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.2s;"
+          onmouseover="this.style.background='rgba(255,59,92,0.2)'"
+          onmouseout="this.style.background='rgba(255,59,92,0.1)'">
+          <i class="fas fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -660,6 +720,61 @@
     </div>
   </div>
 
+  <script>
+    // ---- Auth Guard + Localhost Enforcement ----
+    (function() {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      // Block direct file:// access
+      if (window.location.protocol === 'file:') {
+        document.body.innerHTML = `
+          <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+               background:#050c15;font-family:'Segoe UI',sans-serif;text-align:center;padding:20px">
+            <div style="background:#0a1628;border:1px solid rgba(0,212,255,0.2);border-radius:16px;
+                 padding:48px 40px;max-width:460px;box-shadow:0 0 60px rgba(0,132,255,0.1)">
+              <div style="font-size:3rem;margin-bottom:16px">🛡️</div>
+              <div style="font-size:1.4rem;font-weight:800;letter-spacing:3px;
+                   background:linear-gradient(90deg,#0a84ff,#00d4ff);
+                   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                   margin-bottom:10px">FALCON</div>
+              <div style="color:#ff3b5c;font-size:1rem;font-weight:600;margin-bottom:12px">
+                ⚠ Direct file access is not allowed
+              </div>
+              <div style="color:#7a9fc0;font-size:0.85rem;line-height:1.7;margin-bottom:28px">
+                This dashboard must be run through the local server.<br>
+                Open a terminal in the project folder and run:
+              </div>
+              <div style="background:#020812;border:1px solid rgba(0,212,255,0.15);border-radius:8px;
+                   padding:14px 20px;font-family:'Courier New',monospace;color:#00d4ff;
+                   font-size:0.95rem;letter-spacing:1px;margin-bottom:28px">
+                python server.py
+              </div>
+              <div style="color:#7a9fc0;font-size:0.8rem">
+                Then visit &nbsp;
+                <a href="http://localhost:5000" style="color:#00d4ff;text-decoration:none;
+                   font-weight:600">http://localhost:5000</a>
+              </div>
+            </div>
+          </div>`;
+        return;
+      }
+      // Auth check
+      const auth = sessionStorage.getItem('falcon_auth');
+      if (!auth) {
+        window.location.href = '/login.html';
+        return;
+      }
+      // Populate topbar with real user info
+      try {
+        const user = JSON.parse(auth);
+        const nameEl = document.querySelector('.user-name');
+        const roleEl = document.querySelector('.user-role');
+        const imgEl  = document.querySelector('.user-avatar img');
+        if (nameEl) nameEl.textContent = user.name || 'User';
+        if (roleEl) roleEl.textContent = user.role || 'Analyst';
+        if (imgEl)  imgEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0a84ff&color=fff&size=36`;
+      } catch(e) {}
+    })();
+  </script>
   <script src="app.js"></script>
 </body>
 </html>
